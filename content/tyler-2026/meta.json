@@ -1,0 +1,8 @@
+{
+    "name": "the tyler mod",
+    "global": true,
+
+    "windowTitle": "the tyler mod",
+    "iconFile": "icon64",
+    "defaultTransition": "swipe"
+}
