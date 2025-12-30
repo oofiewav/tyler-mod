@@ -1,0 +1,23 @@
+package funkin.states.options;
+
+using StringTools;
+
+class MiscSubState extends BaseOptionsMenu
+{
+	public function new()
+	{
+		title = 'Misc';
+		rpcTitle = 'Miscellaneous Menu'; // for Discord Rich Presence
+		
+		var option:Option = new Option('NMV Splash Screen', "If unchecked, it will completely skip the splash screen upon the engine's boot up.", 'toggleSplashScreen', 'bool', true);
+		addOption(option);
+		
+		var option:Option = new Option('Dev Mode', "If checked, traces & developer hotkeys will become available.", 'inDevMode', 'bool', true);
+		addOption(option);
+
+        var option:Option = new Option('Streamed Song files', 'If checked, playable song files will be streamed via bytes instead of being loaded all at once. This heavily improves loading times, however it is EXTREMELY EXPERIMENTAL and prone to issues.', 'streamedMusic', 'bool', false);
+        addOption(option);
+        
+		super();
+	}
+}
