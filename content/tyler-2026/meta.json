@@ -4,5 +4,9 @@
 
     "windowTitle": "the tyler mod",
     "iconFile": "icon64",
-    "defaultTransition": "swipe"
+    "defaultTransition": "swipe",
+
+    "stateRedirects": {
+        "CreditsState": "Credits"
+    }
 }
