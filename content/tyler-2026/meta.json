@@ -3,7 +3,7 @@
     "global": true,
 
     "windowTitle": "the tyler mod",
-    "iconFile": "icon64",
+    "iconFile": "icon",
     "defaultTransition": "swipe",
 
     "stateRedirects": {
