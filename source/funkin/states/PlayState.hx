@@ -515,6 +515,13 @@ class PlayState extends MusicBeatState
 	var rpcSongName:String = '';
 	
 	/**
+	 * Variable that determines whether PlayState will automatically handle Discord RPC.
+	 *
+	 * Useful for if you want custom Discord RPC messages and PlayState gets in the way.
+	**/
+	public var automatedDiscord:Bool = true;
+	
+	/**
 	 * Group of general scripts.
 	 */
 	public var scripts:ScriptGroup;
@@ -886,7 +893,7 @@ class PlayState extends MusicBeatState
 		Paths.sound('missnote3');
 		
 		if (PauseSubState.songName != null) Paths.music(PauseSubState.songName);
-		else if (ClientPrefs.pauseMusic != 'None') Paths.music(Paths.sanitize(ClientPrefs.pauseMusic));
+		else Paths.music(Paths.sanitize('breakfast'));
 		
 		// Updating Discord Rich Presence.
 		resetDiscordRPC();
@@ -1403,16 +1410,8 @@ class PlayState extends MusicBeatState
 		
 		previousFrameTime = FlxG.game.ticks;
 		
-        if(ClientPrefs.streamedMusic){
-            try{
-                var sound = FunkinSound.streamFromBytes(Paths.instPath(PlayState.SONG.song));
-                FlxG.sound.music = sound;
-            } catch(e) {
-                FunkinSound.playMusic(Paths.inst(PlayState.SONG.song), 1, false);
-            }
-        } else 
-            FunkinSound.playMusic(Paths.inst(PlayState.SONG.song), 1, false);
-
+		FunkinSound.playMusic(Paths.inst(PlayState.SONG.song), 1, false);
+		
 		FlxG.sound.music.onComplete = finishSong.bind(false);
 		vocals.play();
 		vocals.volume = 1 * volumeMult;
@@ -1436,7 +1435,7 @@ class PlayState extends MusicBeatState
 		songLength = FlxG.sound.music.length;
 		
 		// Updating Discord Rich Presence (with Time Left)
-		DiscordClient.changePresence(rpcDescription, rpcSongName + ' ' + rpcDifficulty, null, true, songLength);
+		if (automatedDiscord) DiscordClient.changePresence(rpcDescription, rpcSongName + ' ' + rpcDifficulty, null, true, songLength);
 		
 		scripts.set('songLength', songLength);
 		scripts.call('onSongStart', []);
@@ -1517,42 +1516,18 @@ class PlayState extends MusicBeatState
 		
 		curSong = songData.song;
 		
-		Paths.inst(PlayState.SONG.song);
+		if (!ClientPrefs.streamedMusic) Paths.inst(PlayState.SONG.song);
 		
 		vocals = new VocalGroup();
 		add(vocals);
 		
 		if (SONG.needsVoices)
 		{
-            inline function loadSong()
-            {
-                final playerSound = Paths.voices(PlayState.SONG.song, 'player') ?? Paths.voices(PlayState.SONG.song, null);
-                if (playerSound != null) vocals.addPlayerVocals(new FlxSoundEx().loadEmbedded(playerSound));
-                
-                final opponentSound = Paths.voices(PlayState.SONG.song, 'opp');
-                if (opponentSound != null) vocals.addOpponentVocals(new FlxSoundEx().loadEmbedded(opponentSound));
-            }
-
-            if(ClientPrefs.streamedMusic)
-            {
-                try{
-                    var playerPath = Paths.voicesPath(PlayState.SONG.song, 'player');
-                    if(!FunkinAssets.exists(playerPath)) playerPath = Paths.voicesPath(PlayState.SONG.song);
-
-                    final playerSound = FunkinSound.streamFromBytes(playerPath);
-
-                    var opponentPath = Paths.voicesPath(PlayState.SONG.song, 'opp');
-                    final opponentSound = FunkinSound.streamFromBytes(opponentPath);
-
-                    if(playerSound != null) vocals.addPlayerVocals(playerSound);
-                    if(opponentSound != null) vocals.addPlayerVocals(opponentSound);
-                } catch(e:haxe.Exception) {
-                    trace(e);
-                    loadSong();
-                }
-            } else 
-                loadSong();
-            
+			final playerSound = Paths.voices(PlayState.SONG.song, 'player') ?? Paths.voices(PlayState.SONG.song, null);
+			if (playerSound != null) vocals.addPlayerVocals(new FlxSoundEx().loadEmbedded(playerSound));
+			
+			final opponentSound = Paths.voices(PlayState.SONG.song, 'opp');
+			if (opponentSound != null) vocals.addOpponentVocals(new FlxSoundEx().loadEmbedded(opponentSound));
 		}
 		#if FLX_PITCH
 		FlxG.sound.music.pitch = playbackRate;
@@ -1670,6 +1645,9 @@ class PlayState extends MusicBeatState
 				rowArray[swagNote.row].push(swagNote);
 				swagNote.mustPress = gottaHitNote;
 				swagNote.sustainLength = songNotes[2];
+				
+				final isAltNote:Bool = section.altAnim && !gottaHitNote;
+				if (isAltNote) swagNote.animSuffix = '-alt';
 				
 				if (gottaHitNote) lastBFNotes[daNoteData] = swagNote;
 				else lastDadNotes[daNoteData] = swagNote;
@@ -1969,6 +1947,8 @@ class PlayState extends MusicBeatState
 	 */
 	inline function resetDiscordRPC(showTime:Bool = false)
 	{
+		if (!automatedDiscord) return;
+		
 		if (!showTime) DiscordClient.changePresence(rpcDescription, rpcSongName + ' ' + rpcDifficulty);
 		else DiscordClient.changePresence(rpcDescription, rpcSongName + ' ' + rpcDifficulty, null, true, songLength - Conductor.songPosition - ClientPrefs.noteOffset);
 	}
@@ -2085,7 +2065,7 @@ class PlayState extends MusicBeatState
 				{
 					// rewrite this later this is messy
 					
-					final expectedPlayfield:Null<PlayField> = getStrumFromID(dunceNote.lane) ?? dunceNote.desiredPlayfield ?? dunceNote.parent?.playField;
+					final expectedPlayfield:Null<PlayField> = getStrumFromID(dunceNote.lane) ?? dunceNote.parent?.playField;
 					
 					if (expectedPlayfield != null) expectedPlayfield.addNote(dunceNote);
 					else
@@ -2152,7 +2132,7 @@ class PlayState extends MusicBeatState
 		{
 			for (i in 0...playFields?.length)
 			{
-				final strums:Null<PlayField> = playFields.members[i];
+				final strums:Null<PlayField> = getStrumFromID(i);
 				if (strums == null) continue;
 				strums.forEachAlive(strum -> {
 					final pos = modManager.getPos(0, 0, 0, curDecBeat, strum.noteData, i, strum, [], strum.vec3Cache);
@@ -2290,7 +2270,7 @@ class PlayState extends MusicBeatState
 		}
 		openSubState(new PauseSubState());
 		
-		DiscordClient.changePresence(rpcPausedDescription, 'Paused');
+		if (automatedDiscord) DiscordClient.changePresence(rpcPausedDescription, 'Paused');
 	}
 	
 	function openChartEditor():Void
@@ -2304,7 +2284,7 @@ class PlayState extends MusicBeatState
 		FlxG.switchState(ChartEditorState.new);
 		chartingMode = true;
 		
-		DiscordClient.changePresence('Chart Editor');
+		if (automatedDiscord) DiscordClient.changePresence('Chart Editor');
 	}
 	
 	function openCharacterEditor():Void
@@ -2317,7 +2297,7 @@ class PlayState extends MusicBeatState
 		
 		FlxG.switchState(() -> new CharacterEditorState(SONG.player2, true));
 		
-		DiscordClient.changePresence("Character Editor", null, null, true);
+		if (automatedDiscord) DiscordClient.changePresence("Character Editor", null, null, true);
 	}
 	
 	function openNoteskinEditor():Void
@@ -2334,7 +2314,7 @@ class PlayState extends MusicBeatState
 		#end
 		chartingMode = true;
 		
-		DiscordClient.changePresence("Noteskin Editor", null, null, true);
+		if (automatedDiscord) DiscordClient.changePresence("Noteskin Editor", null, null, true);
 	}
 	
 	public function updateScoreBar(miss:Bool = false):Void
@@ -2369,7 +2349,7 @@ class PlayState extends MusicBeatState
 				openSubState(new GameOverSubstate(boyfriend));
 				
 				// Game Over doesn't get his own variable because it's only used here
-				DiscordClient.changePresence("Game Over - " + rpcDescription, rpcSongName);
+				if (automatedDiscord) DiscordClient.changePresence("Game Over - " + rpcDescription, rpcSongName);
 				
 				isDead = true;
 				totalBeat = 0;
@@ -3389,20 +3369,18 @@ class PlayState extends MusicBeatState
 		}
 		
 		// final char:Null<Character> = note.gfNote ? gf : note.owner ?? field.owner;
-		var chars:Array<Dynamic> = note.gfNote ? [gf] : field.singers;
-        if(note.owner != null) chars = [note.owner];
-
+		var chars:Array<Null<Character>> = note.gfNote ? [gf] : field.singers;
+		if (note.owner != null) chars = [note.owner];
+		
 		for (char in chars)
-		{			
+		{
 			if (char != null)
 			{
 				if (!note.hitCausesMiss)
 				{
 					if (!note.noAnimation)
 					{
-						final animSuffix = (note.noteType == 'Alt Animation' || SONG.notes[curSection]?.altAnim) ? '-alt' : '';
-						
-						final animToPlay = noteSkin.data.singAnimations[Std.int(Math.abs(note.noteData))] + animSuffix;
+						final animToPlay = noteSkin.data.singAnimations[Std.int(Math.abs(note.noteData))] + note.animSuffix;
 						
 						char.holdTimer = 0;
 						
@@ -3414,7 +3392,7 @@ class PlayState extends MusicBeatState
 							if (ClientPrefs.jumpGhosts && char.ghostsEnabled && chord != null && chord.length > 1 && note.noteType != "Ghost Note")
 							{
 								final animNote = chord[0];
-								final realAnim = noteSkin.data.singAnimations[Std.int(Math.abs(animNote.noteData))] + animSuffix;
+								final realAnim = noteSkin.data.singAnimations[Std.int(Math.abs(animNote.noteData))] + note.animSuffix;
 								
 								if (char.mostRecentRow != note.row) char.playAnim(realAnim, true);
 								
@@ -3552,7 +3530,7 @@ class PlayState extends MusicBeatState
 		instance = null;
 		
 		scripts.call('onDestroy', [], true);
-
+		
 		scripts = FlxDestroyUtil.destroy(scripts);
 		eventScripts = FlxDestroyUtil.destroy(eventScripts);
 		noteTypeScripts = FlxDestroyUtil.destroy(noteTypeScripts);

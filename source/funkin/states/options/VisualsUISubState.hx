@@ -14,20 +14,7 @@ class VisualsUISubState extends BaseOptionsMenu
 		var option:Option = new Option('Hide HUD', 'If checked, hides most HUD elements.', 'hideHud', 'bool', false);
 		addOption(option);
 		
-		var option:Option = new Option('Time Bar:', "What should the Time Bar display?", 'timeBarType', 'string', 'Time Left', ['Time Left', 'Time Elapsed', 'Song Name', 'Disabled']);
-		addOption(option);
-		
-		var option:Option = new Option('Flashing Lights', "Uncheck this if you're sensitive to flashing lights!", 'flashing', 'bool', true);
-		addOption(option);
-		
-		var option:Option = new Option('Camera Zooms', "If unchecked, the camera won't zoom in on a beat hit.", 'camZooms', 'bool', true);
-		addOption(option);
-		
-		var option:Option = new Option('Score Text Zoom on Hit', "If unchecked, disables the Score text zooming\neverytime you hit a note.", 'scoreZoom', 'bool', true);
-		addOption(option);
-		
-		var option:Option = new Option('Jump Ghosts', "If unchecked, disables characters playing a 'ghost' animation on jumps.", 'jumpGhosts', 'bool', true);
-		
+		var option:Option = new Option('Show Ratings', 'If checked, rating graphics will appear on your HUD.', 'showRatings', 'bool', true);
 		addOption(option);
 		
 		var option:Option = new Option('Health Bar Transparency', 'How much transparent should the health bar and icons be.', 'healthBarAlpha', 'percent', 1);
@@ -38,9 +25,20 @@ class VisualsUISubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 		
-		var option:Option = new Option('Pause Screen Song:', "What song do you prefer for the Pause Screen?", 'pauseMusic', 'string', 'Tea Time', ['None', 'Breakfast', 'Tea Time']);
+		var option:Option = new Option('Time Bar:', "What should the Time Bar display?", 'timeBarType', 'string', 'Time Left', ['Time Left', 'Time Elapsed', 'Song Name', 'Disabled']);
 		addOption(option);
-		option.onChange = onChangePauseMusic;
+		
+		var option:Option = new Option('Score Text Zoom on Hit', "If unchecked, disables the Score text zooming\neverytime you hit a note.", 'scoreZoom', 'bool', true);
+		addOption(option);
+		
+		var option:Option = new Option('Camera Zooms', "If unchecked, the camera won't zoom in on a beat hit.", 'camZooms', 'bool', true);
+		addOption(option);
+		
+		var option:Option = new Option('Flashing Lights', "Uncheck this if you're sensitive to flashing lights!", 'flashing', 'bool', true);
+		addOption(option);
+		
+		var option:Option = new Option('Jump Ghosts', "If unchecked, disables characters playing a 'ghost' animation on jumps.", 'jumpGhosts', 'bool', false);
+		addOption(option);
 		
 		// var option:Option = new Option('Darnell mode.', "darnell.", 'darnell', 'bool', false);
 		// addOption(option);
@@ -49,21 +47,5 @@ class VisualsUISubState extends BaseOptionsMenu
 		addOption(option);
 		
 		super();
-	}
-	
-	var changedMusic:Bool = false;
-	
-	function onChangePauseMusic()
-	{
-		if (ClientPrefs.pauseMusic == 'None') FlxG.sound.music.volume = 0;
-		else FunkinSound.playMusic(Paths.music(Paths.sanitize(ClientPrefs.pauseMusic)));
-		
-		changedMusic = true;
-	}
-	
-	override function destroy()
-	{
-		if (changedMusic && !OptionsState.onPlayState) FunkinSound.playMusic(Paths.music('freakyMenu'));
-		super.destroy();
 	}
 }

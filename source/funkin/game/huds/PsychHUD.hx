@@ -26,9 +26,9 @@ class PsychHUD extends BaseHUD
 	var ratingPrefix:String = "";
 	var ratingSuffix:String = '';
 	var textDivider = '|';
-	var showRating:Bool = true;
-	var showRatingNum:Bool = true;
-	var showCombo:Bool = true;
+	var showRating:Bool = ClientPrefs.showRatings;
+	var showRatingNum:Bool = ClientPrefs.showRatings;
+	var showCombo:Bool = ClientPrefs.showRatings;
 	var updateIconPos:Bool = true;
 	var updateIconScale:Bool = true;
 	var comboOffsets:Null<Array<Int>> = null; // So u can overwrite the users combo offset if needed without messing with clientprefs
@@ -43,20 +43,21 @@ class PsychHUD extends BaseHUD
 		healthBar.leftToRight = false;
 		healthBar.scrollFactor.set();
 		healthBar.visible = !ClientPrefs.hideHud;
-		healthBar.alpha = ClientPrefs.healthBarAlpha;
+		healthBar.alphaMultipler = ClientPrefs.healthBarAlpha;
+		
 		reloadHealthBarColors();
 		add(healthBar);
 		
 		iconP1 = new HealthIcon(parent.boyfriend.healthIcon, true);
 		iconP1.y = healthBar.y - 75;
 		iconP1.visible = !ClientPrefs.hideHud;
-		iconP1.alpha = ClientPrefs.healthBarAlpha;
+		iconP1.alphaMultipler = ClientPrefs.healthBarAlpha;
 		add(iconP1);
 		
 		iconP2 = new HealthIcon(parent.dad.healthIcon, false);
 		iconP2.y = healthBar.y - 75;
 		iconP2.visible = !ClientPrefs.hideHud;
-		iconP2.alpha = ClientPrefs.healthBarAlpha;
+		iconP2.alphaMultipler = ClientPrefs.healthBarAlpha;
 		add(iconP2);
 		
 		scoreTxt = new FlxText(0, healthBar.y + 40, FlxG.width, "", 20);
@@ -281,7 +282,13 @@ class PsychHUD extends BaseHUD
 		
 		if (showRatingNum)
 		{
-			ratingNumGroup.clear();
+			for (i in ratingNumGroup)
+			{
+				if (i.alive)
+				{
+					i.kill();
+				}
+			}
 			
 			var seperatedScore:Array<Int> = [];
 			
@@ -297,6 +304,8 @@ class PsychHUD extends BaseHUD
 			for (i in seperatedScore)
 			{
 				var numScore:FlxSprite = ratingNumGroup.recycle(FlxSprite);
+				FlxTween.cancelTweensOf(numScore);
+				
 				numScore.loadGraphic(Paths.image(ratingPrefix + 'num' + Std.int(i) + ratingSuffix));
 				numScore.alpha = 1;
 				numScore.screenCenter();

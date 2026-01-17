@@ -24,6 +24,8 @@ typedef EventNote =
 
 class Note extends FlxSprite
 {
+	public static var defaultNotes = ['No Animation', 'GF Sing', ''];
+	
 	public var row:Int = 0;
 	public var lane:Int = 0;
 	
@@ -146,9 +148,8 @@ class Note extends FlxSprite
 	
 	public var owner:Character = null;
 	public var playField(default, set):PlayField;
-	public var desiredPlayfield:PlayField; // incase a note should be put into a specific playfield
 	
-	public static var defaultNotes = ['No Animation', 'GF Sing', ''];
+	public var animSuffix = '';
 	
 	public function set_playField(field:PlayField)
 	{
@@ -203,6 +204,8 @@ class Note extends FlxSprite
 		{
 			switch (value)
 			{
+				case 'Alt Animation':
+					animSuffix = '-alt';
 				case 'Hurt Note':
 					ignoreNote = mustPress;
 					missHealth = isSustainNote ? 0.1 : 0.3;
@@ -245,7 +248,7 @@ class Note extends FlxSprite
 		this.player = player;
 		isSustainNote = sustainNote;
 		
-		if ((ClientPrefs.noteSkin == 'Quants' || ClientPrefs.noteSkin == "QuantStep") && canQuant)
+		if (ClientPrefs.quants && canQuant)
 		{
 			var beat = Conductor.getBeatInMeasure(strumTime);
 			if (prevNote != null && isSustainNote) quant = prevNote.quant;
@@ -364,7 +367,7 @@ class Note extends FlxSprite
 		
 		var lastScaleY:Float = scale.y;
 		var blahblah:String = arraySkin.join('/');
-		isQuant = (ClientPrefs.noteSkin == 'Quants' || ClientPrefs.noteSkin == "QuantStep") && NoteSkinHelper.instance.data.isQuants;
+		isQuant = ClientPrefs.quants && NoteSkinHelper.instance.data.isQuants;
 		if (NoteSkinHelper.instance.data.isPixel)
 		{
 			if (isSustainNote)

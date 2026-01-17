@@ -20,8 +20,10 @@ class ClientPrefs
 {
 	// debug ------------------------------------------------------------------------//
 	@saveVar public static var inDevMode:Bool = false;
-
-    @saveVar public static var streamedMusic:Bool = true;
+	
+	@saveVar public static var streamedMusic:Bool = false;
+	
+	@saveVar public static var autoPause:Bool = false;
 	
 	// graphics ------------------------------------------------------------------------//
 	@saveVar public static var gpuCaching:Bool = true;
@@ -35,11 +37,13 @@ class ClientPrefs
 	@saveVar public static var framerate:Int = 60;
 	
 	// visuals ------------------------------------------------------------------------//
-	@saveVar public static var jumpGhosts:Bool = true;
+	@saveVar public static var jumpGhosts:Bool = false;
 	
 	@saveVar public static var noteSplashes:Bool = true;
 	
 	@saveVar public static var hideHud:Bool = false;
+	
+	@saveVar public static var showRatings:Bool = true;
 	
 	@saveVar public static var timeBarType:String = 'Time Left';
 	
@@ -96,8 +100,9 @@ class ClientPrefs
 	
 	@saveVar public static var noteOffset:Int = 0;
 	
-	@saveVar public static var noteSkin:String = 'Vanilla';
+	@saveVar public static var quants:Bool = false;
 	
+	// @saveVar public static var noteSkin:String = 'Vanilla';
 	@saveVar public static var comboOffset:Array<Int> = [0, 0, 0, 0];
 	
 	@saveVar public static var gameplaySettings:Map<String, Dynamic> = [
@@ -244,7 +249,7 @@ class ClientPrefs
 		FlxG.save.flush();
 		
 		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2', 'nmvTeam'); 
+		save.bind('controls_v2');
 		save.data.customControls = keyBinds;
 		save.close();
 	}
@@ -256,6 +261,12 @@ class ClientPrefs
 	 */
 	public static function load()
 	{
+		if (FlxG.save.data == null)
+		{
+			FlxG.save.bind('funkin');
+			FlxG.save.flush();
+		}
+		
 		if (FlxG.save.data.volume != null) FlxG.sound.volume = FlxG.save.data.volume;
 		
 		if (FlxG.save.data.mute != null) FlxG.sound.muted = FlxG.save.data.mute;
@@ -276,21 +287,14 @@ class ClientPrefs
 		}
 		
 		var save:FlxSave = new FlxSave();
-		save.bind('controls_v2', 'nmvTeam');
-		if (save != null)
+		save.bind('controls_v2');
+		if (save != null && save.data.customControls != null)
 		{
-			try
-			{
-				if (save.data.customControls != null) CoolUtil.copyMapValues(save.data.customControls, keyBinds);
-			}
-			catch (e:haxe.Exception)
-			{
-				trace(e);
-			}
+			CoolUtil.copyMapValues(save.data.customControls, keyBinds);
 		}
 		reloadControls();
 		
-		save.destroy();
+		save = FlxDestroyUtil.destroy(save);
 	}
 	
 	inline public static function getGameplaySetting(name:String, defaultValue:Dynamic):Dynamic

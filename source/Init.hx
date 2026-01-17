@@ -50,6 +50,8 @@ class Init extends FlxState
 		FlxG.sound.music = new extensions.flixel.FlxSoundEx();
 		FlxG.sound.music.persist = true;
 		
+		FlxG.autoPause = ClientPrefs.autoPause;
+		
 		// ready backends
 		funkin.backend.plugins.HotReloadPlugin.init();
 		
@@ -77,6 +79,7 @@ class Init extends FlxState
 		super.create();
 		
 		final nextState:Class<FlxState> = Main.startMeta.skipSplash || !ClientPrefs.toggleSplashScreen ? Main.startMeta.initialState : Splash;
+		// final nextState = funkin.states.editors.WIPNoteSkinEditor;
 		FlxG.switchState(() -> Type.createInstance(nextState, []));
 	}
 }
