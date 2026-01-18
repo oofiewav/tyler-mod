@@ -4,6 +4,7 @@ import flixel.text.FlxText;
 
 import funkin.scripting.ScriptedState;
 import funkin.objects.CheckboxThingie;
+import flixel.util.FlxAxes;
 
 typedef ModData =
 {
